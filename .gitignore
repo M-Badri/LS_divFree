@@ -1,0 +1,12 @@
+*.log
+*.aux
+*.out
+*.dvi
+*.pdf
+*.blg
+*.cbp
+*.layout
+*.depend
+src/matrix_lib.f90
+bin/
+obj/
