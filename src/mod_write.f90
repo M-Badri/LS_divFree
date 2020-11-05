@@ -25,8 +25,8 @@ contains
                 write(nunit,*) x1d(i), x1d(j), u(n)
             end do
         end do
-
         close (nunit)
+
     end subroutine write_out_scalar_field
 
 
