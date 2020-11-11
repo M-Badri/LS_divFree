@@ -22,21 +22,16 @@ program simplified_2
 
     call get_test_2_data (x1d, y1d, xd, yd, ud, vd)
 
-!
     b = ls_matrix_scalar (xd, yd)
     btb = matmul (transpose (b), b)
     btu = matmul (transpose (b), ud)
-!
+
     btb_inv = inverse_matrix (btb)
-!    print*, b(1,:),"------", b(2,1) !matmul(btb_i, btb)
+
 !    b_i = inverse_matrix (b)
-!    print*, matmul(btb_i, btb)
-!    print*, size(b_i,1), size(b_i,2)
 !    btb_inv_bt = matmul (btb_inv, transpose(b))
 
-!    coef =  matmul (b_i, ud)
      coef =  matmul (btb_inv, btu)
-
 
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
     call get_interpolation_scalar (xi, yi, coef, ui_scalar)
