@@ -87,10 +87,15 @@ contains
         integer :: nd_ylo = 14, nd_yhi = 17
         real (kind = 8), parameter  :: pi = acos(-1.d0)
         real (kind = 8), parameter  :: lx = 2.d0 * pi, ly = 2.d0 * pi
-        integer :: i, j, n
-        integer :: nd
+        integer :: i, j, n, nd
 
         nd = (nd_xhi - nd_xlo + 1) * (nd_yhi - nd_ylo + 1)
+        if(allocated(xd))  deallocate(xd)
+        if(allocated(yd))  deallocate(yd)
+        if(allocated(ud))  deallocate(ud)
+        if(allocated(vd))  deallocate(vd)
+        if(allocated(x1d)) deallocate(x1d)
+        if(allocated(y1d)) deallocate(y1d)
         allocate (xd(nd), yd(nd), ud(nd), vd(nd))
         allocate (x1d(nd_xhi - nd_xlo + 1), y1d(nd_yhi - nd_ylo + 1))
 
@@ -109,15 +114,15 @@ contains
         do j = nd_ylo , nd_yhi
             do i = nd_xlo , nd_xhi
                 n = n + 1
-!                print*, n
                 xd(n) = (i - 0.5d0) * (lx / real(nx, kind = 8) )
 
                 yd(n) = (j - 0.5d0) * (ly / real(ny, kind = 8) )
-!                print*, n, yd(n)
                 ud(n) = -dcos (xd(n)) * dsin (yd(n))
                 vd(n) =  dsin (xd(n)) * dcos (yd(n))
             end do
         end do
+
+        print*, lx / real(nx, kind = 8)
 
     end subroutine get_test_2_data
 
@@ -139,6 +144,10 @@ contains
                 (yd(lbound(yd,1):ubound(yd,1)-1) + yd(lbound(yd,1)+1:ubound(yd,1)))
 
         ni = size(xt) * size(yt)
+        if(allocated(xi))   deallocate (xi)
+        if(allocated(yi))   deallocate (yi)
+        if(allocated(vi_e)) deallocate (vi_e)
+        if(allocated(ui_e)) deallocate (ui_e)
         allocate (xi(ni))
         allocate (yi(ni))
         allocate (vi_e(ni))

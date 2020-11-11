@@ -31,12 +31,18 @@ program simplified_2
      coef =  matmul (btb_inv, btu)
 
 
+    !> Tests the scalar MLS
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
     call get_interpolation_scalar (xi, yi, coef, ui_scalar)
     nd = size(ud)
     allocate(ui(size(xi)))
     call get_mls_scalar (nd, xd, yd, ud, xi(:), yi(:), ui(:))
     print*, ui(:) - ui_e(:)
+
+    !> Tests the vector MLS
+    call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
+
+    ! I am going to check rebase
 
 end program simplified_2
 
