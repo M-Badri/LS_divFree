@@ -82,7 +82,7 @@ contains
         implicit none
         real(kind = 8), allocatable, dimension(:), intent (in out) :: xd, yd, ud, vd
         real(kind = 8), allocatable, dimension(:), intent (in out) :: x1d, y1d
-        integer, parameter :: nx = 64,  ny = 64
+        integer, parameter :: nx = 128,  ny = 128
         integer :: nd_xlo = 57, nd_xhi = 60
         integer :: nd_ylo = 14, nd_yhi = 17
         real (kind = 8), parameter  :: pi = acos(-1.d0)
@@ -122,8 +122,6 @@ contains
             end do
         end do
 
-        print*, lx / real(nx, kind = 8)
-
     end subroutine get_test_2_data
 
 
@@ -160,6 +158,7 @@ contains
                 xi(m) = xt(i)
                 yi(m) = yt(j)
                 ui_e(m) = -dcos (xi(m)) * dsin (yi(m))
+                vi_e(m) =  dsin (xi(m)) * dcos (yi(m))
             end do
         end do
 

@@ -11,8 +11,8 @@ program simplified_2
     real(kind = 8), allocatable, dimension (:,:) :: b, btb, btb_inv
     real(kind = 8), allocatable, dimension (:)   :: xi, yi, ui_e, vi_e
     real(kind = 8), allocatable, dimension (:)   :: ui_scalar
-    real(kind = 8), allocatable :: ui(:)
-    integer ::  nd
+    real(kind = 8), allocatable :: ui(:), vi(:)
+    integer ::  nd, i
 
 !    call get_test_1_data (x1d, y1d, xd, yd, ud, vd)
 !    call write_out_scalar_field (x1d, y1d, xd, yd, ud, "intial_field.dat")
@@ -31,25 +31,30 @@ program simplified_2
      coef =  matmul (btb_inv, btu)
 
 
-    !> Tests the scalar MLS
+    !> Tests the scalar MLS for u
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
-    call get_interpolation_scalar (xi, yi, coef, ui_scalar)
-    nd = size(ud)
-    allocate(ui(size(xi)))
-    call get_mls_scalar (nd, xd, yd, ud, xi(:), yi(:), ui(:))
+    call get_mls_scalar (size(ud), xd, yd, ud, xi, yi, ui)
     print*, ui(:) - ui_e(:)
+    print*, ""
 
-    !> Tests the vector MLS
+    !> Tests the scalar MLS for v
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
+    call get_mls_scalar (size(ud), xd, yd, vd, xi, yi, vi)
+    print*,  vi(:) - vi_e(:)
+    print*, " "
 
 
-    ! test main_1
-    ! test main_2
-    ! test_rebase_1
-    ! test rebase_2
+    !> Tests the vector MLS for u and v
+    if (allocated(vi)) deallocate(vi)
+    if (allocated(ui)) deallocate(ui)
+    call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
+    call get_mls_vector (size(vd), xd, yd, ud, vd, xi, yi, ui, vi)
+    print*,  ui(:) -ui_e(:)
+    print*, " "
 
-
-
+    do i = 1, 9
+        print*, i, vi(i)- vi_e(i)
+    end do
 
 end program simplified_2
 
