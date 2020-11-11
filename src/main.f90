@@ -42,8 +42,7 @@ program simplified_2
     !> Tests the vector MLS
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
 
-    ! I am going to check rebase
-    ! I am adding to main now
+    ! test main_1
 
 
 
