@@ -4,9 +4,6 @@ program simplified_2
     use mod_math
     use mod_least_square
     use mod_write
-    USE LA_PRECISION, ONLY: WP => DP
-    USE F95_LAPACK, ONLY: LA_GESVD, LA_GESV
-
 
     implicit none
     real(kind = 8), allocatable, dimension (:)   :: xd, yd, ud, vd, btu, coef
@@ -33,13 +30,13 @@ program simplified_2
 
      coef =  matmul (btb_inv, btu)
 
+
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
     call get_interpolation_scalar (xi, yi, coef, ui_scalar)
-
     nd = size(ud)
-    allocate(ui(1))
-    call get_mls_scalar (nd, xd, yd, ud, [xi(1)], [yi(1)], ui)
-    print*, ui - ui_e(1)
+    allocate(ui(size(xi)))
+    call get_mls_scalar (nd, xd, yd, ud, xi(:), yi(:), ui(:))
+    print*, ui(:) - ui_e(:)
 
 end program simplified_2
 

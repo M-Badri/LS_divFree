@@ -13,7 +13,6 @@ contains
         integer, parameter :: nx = 8, ny = 8
         real (kind = 8), parameter  :: pi = acos(-1.d0)
         real (kind = 8), parameter  :: lx = 2.d0 * pi, ly = 2.d0 * pi
-        real (kind = 8) :: x, y
         integer :: i, j, n
         integer :: nd
 
@@ -88,7 +87,6 @@ contains
         integer :: nd_ylo = 14, nd_yhi = 17
         real (kind = 8), parameter  :: pi = acos(-1.d0)
         real (kind = 8), parameter  :: lx = 2.d0 * pi, ly = 2.d0 * pi
-        real (kind = 8) :: x, y
         integer :: i, j, n
         integer :: nd
 
@@ -152,7 +150,7 @@ contains
                 m = m + 1
                 xi(m) = xt(i)
                 yi(m) = yt(j)
-                ui_e(m) = -dcos (xi(i)) * dsin (yi(j))
+                ui_e(m) = -dcos (xi(m)) * dsin (yi(m))
             end do
         end do
 

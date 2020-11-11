@@ -10,6 +10,7 @@ contains
         implicit none
         real(kind = 8), optional   :: tol
         real(kind = 8), intent(in) :: a(:,:)
+        real(kind = 8), allocatable :: work(:)
         real(kind = 8) :: a_inv (size(a,1),size(a,2))
         real(kind = 8) :: a_copy(size(a,1),size(a,2))
         real(kind = 8) :: s(min(size(a,1), size(a,2)))
@@ -17,7 +18,7 @@ contains
         real(kind = 8) :: u(size(a,1),size(a,1))
         real(kind = 8) :: vt(size(a,2),size(a,2))
         real(kind = 8) :: my_tol
-        real(kind = 8), allocatable :: work(:)
+
         integer(kind = 4) :: m, n, i
         integer(kind = 4) :: info
         integer(kind = 4) :: lda

@@ -10,9 +10,10 @@ contains
 
         implicit none
         integer, parameter :: nc = 6
-        real(kind = 8), intent (in) :: xd(:)    , yd(:)
-        real(kind = 8), allocatable ::  b(:,:)
+        real(kind = 8), intent (in) :: xd(:), yd(:)
+
         integer :: i, nd
+        real(kind = 8), allocatable ::  b(:,:)
 
         nd = size (xd)
         allocate (b(nd, nc))
@@ -51,27 +52,23 @@ contains
         implicit none
         integer, parameter :: nc = 6
         integer, intent(in) :: nd
+        real(kind = 8), intent(in out) :: ui(:)
         real(kind = 8), intent(in) :: xd(nd), yd(nd), ud(nd), xi(:), yi(:)
-        real(kind = 8) :: p(nd,nc), w(nd,nd), b(nc,nd), a(nc,nc), a_inv(nc,nc)
+
         integer :: ni, n
-        real(8) :: ui(1), c(nc), tt(6)
+        real(kind = 8) :: p(nd,nc), w(nd,nd), b(nc,nd), a(nc,nc), a_inv(nc,nc)
+        real(kind = 8) :: c(nc), temp(nc)
 
         ni = size(xi)
         do n = 1, ni
             p = mls_p_matrix_scalar (nd, nc, xd, yd)
             w = mls_w_matrix_scalar (nd, xd, yd, xi(n), yi(n))
-            a = matmul (transpose(p), matmul(w, p))
-            a_inv = inverse_matrix (a)
             b = matmul (transpose(p), w)
-!            phi = matmul (transpose(p), matmul(a_inv, b))
+            a = matmul (b, p)
+            a_inv = inverse_matrix (a)
             c = matmul (a_inv, matmul(b, ud))
-!            ui = matmul (transpose(p), c)
-        end do
-
-        ui = 0.d0
-        tt = [1.d0, xi, yi, xi**2, xi*yi, yi**2]
-        do n = 1, nc
-            ui = ui + c(n)* tt(n)
+            temp = [1.d0, xi(n), yi(n), xi(n)**2, xi(n)*yi(n), yi(n)**2]
+            ui(n) = dot_product (c, temp)
         end do
 
     end subroutine get_mls_scalar
@@ -83,8 +80,9 @@ contains
         implicit none
         integer, intent(in) :: nd, nc
         real(kind = 8), intent(in) :: xd(nd), yd(nd)
-        real(kind = 8) :: b(nd,nc)
+
         integer :: i
+        real(kind = 8) :: b(nd,nc)
 
         do i = 1, nd
             b(i, :) = [1.d0, xd(i), yd(i), xd(i)**2, xd(i)*yd(i), yd(i)**2]
@@ -99,14 +97,13 @@ contains
         implicit none
         integer, intent(in) :: nd
         real(kind = 8), intent(in)  :: xd(nd), yd(nd), xi, yi
+
+        integer :: n
         real(kind = 8) :: w(nd,nd), r(nd)
         real(kind = 8) :: maxdis
-        integer :: n
 
-        maxdis = 0.0d0
         do n = 1, nd
             r(n) = norm2 ([xi-xd(n), yi-yd(n)])
-            maxdis = max (r(n), maxdis)
         end do
 
         maxdis = maxval (r(:))
