@@ -41,20 +41,21 @@ program simplified_2
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
     call get_mls_scalar (size(ud), xd, yd, vd, xi, yi, vi)
     print*,  vi(:) - vi_e(:)
-    print*, " "
 
+    print*, "****************************************************************************"
+    print*, "****************************************************************************"
+    print*, " "
 
     !> Tests the vector MLS for u and v
     if (allocated(vi)) deallocate(vi)
     if (allocated(ui)) deallocate(ui)
     call get_test_2_interplation_coordinates (x1d, y1d, xi, yi, ui_e, vi_e)
     call get_mls_vector (size(vd), xd, yd, ud, vd, xi, yi, ui, vi)
-    print*,  ui(:) -ui_e(:)
+    print*,  ui(:) - ui_e(:)
     print*, " "
-
-    do i = 1, 9
-        print*, i, vi(i)- vi_e(i)
-    end do
+    print*,  vi(:) - vi_e(:)
+    print*, "****************************************************************************"
+    print*, "****************************************************************************"
 
 end program simplified_2
 
