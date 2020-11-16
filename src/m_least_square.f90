@@ -1,6 +1,6 @@
-module mod_least_square
+module m_least_square
 
-    use mod_math
+    use m_math
 
 contains
 
@@ -69,6 +69,7 @@ contains
             a_inv = inverse_matrix (a)
             c = matmul (a_inv, matmul(b, ud))
             temp = [1.d0, xi(n), yi(n), xi(n)**2, xi(n)*yi(n), yi(n)**2]
+!            temp = [1.d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0**2]
             ui(n) = dot_product (c, temp)
         end do
 
@@ -216,4 +217,4 @@ contains
 
 
 
-end module mod_least_square
+end module m_least_square

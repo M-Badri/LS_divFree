@@ -1,4 +1,4 @@
-module mod_math
+module m_math
 
 
 contains
@@ -65,4 +65,4 @@ contains
 
 
 
-end module mod_math
+end module m_math
