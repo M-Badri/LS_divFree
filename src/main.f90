@@ -81,17 +81,23 @@ program simplified_2
 !        s_intrp = interpolation_factory ("scalar", 2, td%n_lvls, &
 !                                        td%n1, td%n2, td%dx_c, td%dy_c)
 
-        s_intrp = s_intrp%constructor (2, td%n_lvls, &
-                                        td%n1, td%n2, td%dx_c, td%dy_c)
+!        s_intrp = s_intrp%constructor (2, td%n_lvls, &
+!                                        td%n1, td%n2, td%dx_c, td%dy_c)
 
         v_intrp = v_intrp%constructor (2, td%n_lvls, &
                                         td%n1, td%n2, td%dx_c, td%dy_c)
 
+        s_intrp = s_intrp%constructor (2, td%n_lvls, &
+                                        td%n1, td%n2, td%dx_c, td%dy_c)
+
         allocate (u_fine(4, td%n1*td%n2))
         do i = 1, td%n_lvls
+            call v_intrp%get_interpolated ( i, td%n1, td%n2, &
+                                            td%x(i,:), td%y(i,:), &
+                                            td%u(i,:), td%v(i,:),  u_fine )
+print*, "############"
             call s_intrp%get_interpolated ( i, td%n1, td%n2, &
                                             td%x(i,:), td%y(i,:), &
-!                                            td%ll_corner_x(i), td%ll_corner_y(i), &
                                             td%u(i,:),  u_fine )
         end do
 

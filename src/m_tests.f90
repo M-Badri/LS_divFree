@@ -41,7 +41,7 @@ contains
         class(t_test_data), allocatable :: td1
         real(kind = R8), parameter :: pi = dacos(-1.0d0)
         real(kind = R8) :: lx = 2.0d0*pi, ly = 2.0d0*pi
-        integer(kind = I4) :: nx = 32, ny = 32
+        integer(kind = I4) :: nx = 256, ny = 256
         integer(kind = I4) :: i, j, n, m
         real(kind = R8) :: dx, dy
 

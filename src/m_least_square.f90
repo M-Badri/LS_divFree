@@ -9,7 +9,7 @@ contains
     function ls_matrix_scalar (xd, yd) result (b)
 
         implicit none
-        integer, parameter :: nc = 6
+        integer, parameter :: nc = 8
         real(kind = 8), intent (in) :: xd(:), yd(:)
 
         integer :: i, nd
@@ -50,7 +50,7 @@ contains
     subroutine get_mls_scalar (nd, xd, yd, ud, xi, yi, ui)
 
         implicit none
-        integer, parameter :: nc = 6
+        integer, parameter :: nc = 8
         integer, intent(in) :: nd
         real(kind = 8), intent(in) :: xd(nd), yd(nd), ud(nd), xi(:), yi(:)
         real(kind = 8), intent(in out), allocatable  :: ui(:)
@@ -68,8 +68,9 @@ contains
             a = matmul (b, p)
             a_inv = inverse_matrix (a)
             c = matmul (a_inv, matmul(b, ud))
-            temp = [1.d0, xi(n), yi(n), xi(n)**2, xi(n)*yi(n), yi(n)**2]
-!            temp = [1.d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0**2]
+            temp = [1.d0, xi(n), yi(n),  &
+                    xi(n)**2, xi(n)*yi(n), yi(n)**2, &
+                    xi(n)**2 * yi(n), yi(n)**2 * xi(n) ]
             ui(n) = dot_product (c, temp)
         end do
 
@@ -86,9 +87,26 @@ contains
         integer :: i
         real(kind = 8) :: b(nd,nc)
 
-        do i = 1, nd
-            b(i, :) = [1.d0, xd(i), yd(i), xd(i)**2, xd(i)*yd(i), yd(i)**2]
-        end do
+        if (nc == 6) then
+
+            do i = 1, nd
+                b(i, :) = [1.d0, xd(i), yd(i), xd(i)**2, &
+                           xd(i)*yd(i), yd(i)**2]
+            end do
+
+        else if (nc == 8) then
+
+            do i = 1, nd
+                b(i, :) = [1.d0, xd(i), yd(i), xd(i)**2, &
+                           xd(i)*yd(i), yd(i)**2, &
+                           xd(i)**2 * yd(i), yd(i)**2 * xd(i)]
+            end do
+
+        else
+
+            stop "The order of the basis is not defined for 'mls_p_matrix_scalar'."
+
+        end if
 
     end function mls_p_matrix_scalar
 
@@ -98,7 +116,7 @@ contains
 
         implicit none
         integer, intent(in) :: nd
-        real(kind = 8), intent(in)  :: xd(nd), yd(nd), xi, yi
+        real(kind = 8), intent(in) :: xd(nd), yd(nd), xi, yi
 
         integer :: n
         real(kind = 8) :: w(nd,nd), r(nd)
@@ -174,6 +192,8 @@ contains
 
         integer :: i
         real(kind = 8) :: p(3*nd,nc)
+
+        print*, nd, "rrrrrrrrrrrrr"
 
         do i = 1, nd
             p(3*i-2, :) = [1.0d0, xd(i), yd(i), xd(i)**2, yd(i)**2, xd(i)*yd(i), &

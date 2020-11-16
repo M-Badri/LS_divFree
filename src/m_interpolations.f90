@@ -41,7 +41,7 @@ module m_interpolations
 
         procedure, nopass :: constructor => scalar_constructor
         procedure :: get_interpolated => get_s_interpolated
-        procedure :: get_momentum_matrices
+        procedure :: get_scalar_momentum_matrices
 
     end type t_scalar_mls
 
@@ -53,6 +53,7 @@ module m_interpolations
 
         procedure, nopass :: constructor => vector_constructor
         procedure :: get_interpolated => get_v_interpolated
+        procedure :: get_vector_momentum_matrices
 
     end type t_vector_mls
 
@@ -73,11 +74,16 @@ contains
 
         allocate (t_scalar_mls :: intrp)
 
-        if (order == 2) then
-            intrp%nc = 6
-        else
-            stop "Wrong order for interpolation!"
-        end if
+        selectcase (order)
+            case (2)
+                intrp%nc = 6
+
+            case (3)
+                intrp%nc = 8
+
+            case default
+                stop "Wrong order for interpolation!"
+        end select
 
         intrp%nchlds = 4
         intrp%nlvls = nlvls
@@ -98,13 +104,13 @@ contains
             end do
         end do
 
-        call intrp%get_momentum_matrices(nd)
+        call intrp%get_scalar_momentum_matrices(nd)
 
     end function scalar_constructor
 
 
 
-    subroutine get_momentum_matrices(this, nd)
+    subroutine get_scalar_momentum_matrices(this, nd)
 
         implicit none
         class(t_scalar_mls) :: this
@@ -119,10 +125,6 @@ contains
             call this%fill_stencil_matrises (n)
             dx = this%dx_at_level (n) / 2.0d0
             dy = this%dx_at_level (n) / 2.0d0
-!            xi(1:2:1) = -dx
-!            xi(3:4:1) =  dx
-!            yi(1:3:2) =  dy
-!            yi(2:4:2) = -dy
             xi(1:3:2) = -dx
             xi(2:4:2) =  dx
             yi(1:2:1) = -dy
@@ -140,7 +142,252 @@ contains
             end do
         end do
 
-    end subroutine get_momentum_matrices
+    end subroutine get_scalar_momentum_matrices
+
+
+
+    subroutine get_s_interpolated (this, lvl, n1, n2, xd, yd, u, u_f)
+
+        implicit none
+        class(t_scalar_mls), intent(in) :: this
+        integer(kind = I4),  intent(in) :: lvl, n1, n2
+        real(kind = R8), intent(out)    :: u_f(:,:)
+        real(kind = R8), intent(in)     :: u(:)
+        real(kind = R8), intent(in)     :: xd(:), yd(:)
+
+        real(kind = R8), allocatable    :: ut(:), xt(:), yt(:)
+        real(kind = R8), allocatable    :: xc(:), yc(:), c(:), uc(:)
+        real(kind = R8), allocatable    :: temp(:), temp2(:)
+        real(kind = R8)    :: dxc, dyc
+        integer(kind = I4) :: n, i, j, m
+
+        allocate(ut(9))
+        allocate(xt(9))
+        allocate(yt(9))
+        allocate(xc(this%nchlds))
+        allocate(yc(this%nchlds))
+        allocate(uc(this%nchlds))
+
+        selectcase (this%nc)
+
+            case(6)
+                temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+                temp2 = [0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+
+            case(8)
+                temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+                temp2 = [0.0d0, 0.0d0, 0.0d0, 2.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+
+        end select
+
+        n = 0
+        do i = 2, n1 - 1
+            do j = 2, n2 - 1
+                n = (n1*(i-1)) + j
+                ut(1:3) = u(n-n1-1:n-n1+1)
+                ut(4:6) = u(n-1:n+1)
+                ut(7:9) = u(n+n1-1:n+n1+1)
+                xt(1:3) = xd(n-n1-1:n-n1+1)
+                xt(4:6) = xd(n-1:n+1)
+                xt(7:9) = xd(n+n1-1:n+n1+1)
+                yt(1:3) = yd(n-n1-1:n-n1+1)
+                yt(4:6) = yd(n-1:n+1)
+                yt(7:9) = yd(n+n1-1:n+n1+1)
+                dxc = 0.5d0 * this%dx_at_level(lvl)
+                dyc = 0.5d0 * this%dy_at_level(lvl)
+                xc(1:3:2) =  - dxc
+                xc(2:4:2) =  + dxc
+                yc(1:2:1) =  - dyc
+                yc(3:4:1) =  + dyc
+
+                do m = 1, this%nchlds
+
+                    c = matmul (this%arr_of_a_inv(m, lvl)%a, &
+                        matmul (this%arr_of_b_mat(m, lvl)%a, ut))
+                    uc(m) = dot_product (c, temp)
+
+!                    print*, m, uc(m) - dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
+                    if(this%nc == 6) then
+                        print*, m, dot_product (c, temp) &
+                                 , + dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
+                    end if
+                end do
+
+            end do
+        end do
+
+    end subroutine get_s_interpolated
+
+
+
+    function vector_constructor (order, nlvls, nx, ny, dx_c, dy_c) result(intrp)
+
+        implicit none
+        class(t_vector_mls), allocatable :: intrp
+        integer(kind = I4), intent(in) :: order, nlvls, nx, ny
+        real(kind = R8), intent(in) :: dx_c, dy_c
+
+        integer (kind = I4) :: m, n, nd
+
+        allocate (t_vector_mls :: intrp)
+
+        selectcase (order)
+            case (2)
+                intrp%nc = 12
+
+            case (3)
+                intrp%nc = 16
+
+            case default
+                stop "Wrong order for interpolation!"
+        end select
+
+        intrp%nchlds = 4
+        intrp%nlvls = nlvls
+        intrp%dx_c = dx_c
+        intrp%dy_c = dy_c
+
+        nd = 9
+        allocate (intrp%xld(nd))
+        allocate (intrp%yld(nd))
+        allocate (intrp%uld(nd))
+
+        allocate (intrp%arr_of_a_inv(intrp%nchlds, nlvls))
+        allocate (intrp%arr_of_b_mat(intrp%nchlds, nlvls))
+        do n = 1, nlvls
+            do m = 1, intrp%nchlds
+                allocate(intrp%arr_of_a_inv(m, n)%a(intrp%nc, intrp%nc))
+                allocate(intrp%arr_of_b_mat(m, n)%a(intrp%nc, 3*nd))
+            end do
+        end do
+
+        call intrp%get_vector_momentum_matrices(3*nd)
+
+    end function vector_constructor
+
+
+
+    subroutine get_vector_momentum_matrices(this, nd)
+
+        implicit none
+        class(t_vector_mls) :: this
+        integer(kind = I4), intent(in) :: nd
+        integer(kind = I4) :: m, n
+        real(kind = R8), allocatable :: p(:,:), w(:,:), a(:,:), a_inv(:,:)
+        real(kind = R8), allocatable :: xtmp(:), ytmp(:), b(:,:)
+        real(kind = R8) :: dx, dy
+        real(kind = R8) :: xi(4), yi(4)
+
+        do n = 1, this%nlvls
+            call this%fill_stencil_matrises (n)
+            dx = this%dx_at_level (n) / 2.0d0
+            dy = this%dx_at_level (n) / 2.0d0
+            xi(1:3:2) = -dx
+            xi(2:4:2) =  dx
+            yi(1:2:1) = -dy
+            yi(3:4:1) =  dy
+
+            do m = 1, this%nchlds
+                xtmp = this%xld - xi(m)
+                ytmp = this%yld - yi(m)
+                p = mls_p_matrix_vector (nd/3, this%nc, xtmp, ytmp)
+                w = mls_w_matrix_vector (nd/3, xtmp, ytmp, 0.0d0, 0.0d0)
+                b = matmul (transpose(p), w)
+                a = matmul (b, p)
+                this%arr_of_a_inv(m, n)%a(:,:) = inverse_matrix (a)
+                print*, size(b,1), size(b,2),nd
+                this%arr_of_b_mat(m, n)%a(:,:) = b
+            end do
+        end do
+
+    end subroutine get_vector_momentum_matrices
+
+
+
+    subroutine get_v_interpolated (this, lvl, n1, n2, xd, yd, u, v, u_f)
+
+        implicit none
+        class(t_vector_mls), intent(in) :: this
+        integer(kind = I4),  intent(in) :: lvl, n1, n2
+        real(kind = R8), intent(out)    :: u_f(:,:)
+        real(kind = R8), intent(in)     :: u(:), v(:)
+        real(kind = R8), intent(in)     :: xd(:), yd(:)
+
+        real(kind = R8), allocatable    :: ut(:), xt(:), yt(:)
+        real(kind = R8), allocatable    :: xc(:), yc(:), c(:), uc(:)
+        real(kind = R8), allocatable    :: temp(:), temp2(:)
+        real(kind = R8)    :: dxc, dyc
+        integer(kind = I4) :: n, i, j, m
+
+        allocate(ut(27))
+        allocate(xt(9))
+        allocate(yt(9))
+        allocate(xc(this%nchlds))
+        allocate(yc(this%nchlds))
+        allocate(uc(this%nchlds))
+
+        selectcase (this%nc)
+
+            case(12)
+                temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, &
+                         1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+                temp2 = [0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+
+            case(8)
+                temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+                temp2 = [0.0d0, 0.0d0, 0.0d0, 2.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+
+        end select
+
+        n = 0
+        do i = 2, n1 - 1
+            do j = 2, n2 - 1
+                n = (n1*(i-1)) + j
+                ut(1:7:3)   = u(n-n1-1:n-n1+1)
+                ut(2:8:3)   = v(n-n1-1:n-n1+1)
+                ut(3:9:3)   = 0.0d0
+                ut(10:16:3) = u(n-1:n+1)
+                ut(11:17:3) = v(n-1:n+1)
+                ut(12:18:3) = 0.0d0
+                ut(19:25:3) = u(n+n1-1:n+n1+1)
+                ut(20:26:3) = v(n+n1-1:n+n1+1)
+                ut(21:27:3) = 0.0d0
+                xt(1:3) = xd(n-n1-1:n-n1+1)
+                xt(4:6) = xd(n-1:n+1)
+                xt(7:9) = xd(n+n1-1:n+n1+1)
+                yt(1:3) = yd(n-n1-1:n-n1+1)
+                yt(4:6) = yd(n-1:n+1)
+                yt(7:9) = yd(n+n1-1:n+n1+1)
+
+                dxc = 0.5d0 * this%dx_at_level(lvl)
+                dyc = 0.5d0 * this%dy_at_level(lvl)
+                xc(1:3:2) =  - dxc
+                xc(2:4:2) =  + dxc
+                yc(1:2:1) =  - dyc
+                yc(3:4:1) =  + dyc
+
+                do m = 1, this%nchlds
+
+
+!                    print*, size(this%arr_of_b_mat(m, lvl)%a, 1)
+!                    print*, size(this%arr_of_b_mat(m, lvl)%a, 2)
+                    c = matmul (this%arr_of_a_inv(m, lvl)%a, &
+                        matmul (this%arr_of_b_mat(m, lvl)%a, ut))
+                    uc(m) = dot_product (c, temp)
+
+                    print*, m, uc(m) , dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
+!                    if(this%nc == 8) then
+!                        print*, m, dot_product (c, temp2) &
+!                                 + dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
+!                    end if
+!                    print*," "
+
+                end do
+
+            end do
+        end do
+
+    end subroutine get_v_interpolated
 
 
 
@@ -171,6 +418,7 @@ contains
         implicit none
         class(t_interpolations), intent(in) :: this
         integer(kind = I4), intent(in) :: lvl
+
         real(kind = R8) :: dx
 
         dx = this%dx_c / (2.d0**(lvl-1))
@@ -183,117 +431,12 @@ contains
         implicit none
         class(t_interpolations), intent(in) :: this
         integer(kind = I4), intent(in) :: lvl
+
         real(kind = R8) :: dy
 
         dy = this%dy_c / (2.d0**(lvl-1))
+
     end function dy_at_level
-
-
-
-    function vector_constructor (order, nlvls, nx, ny, dx_c, dy_c) result(intrp)
-
-        implicit none
-        class(t_interpolations), allocatable :: intrp
-        integer(kind = I4), intent(in) :: order, nlvls, nx, ny
-        real(kind = R8), intent(in) :: dx_c, dy_c
-
-        integer (kind = I4) :: nc, n
-
-        allocate (t_scalar_mls :: intrp)
-
-        if (order == 2) then
-            nc = 6
-        else
-            stop "Wrong order for interpolation!"
-        end if
-
-!        allocate (intrp%arr_of_a_inv(nlvls))
-!        do n = 1, nlvls
-!            allocate(intrp%arr_of_a_inv(4, n)%a(nx,ny))
-!        end do
-
-    end function vector_constructor
-
-
-
-    subroutine get_s_interpolated (this, lvl, n1, n2, xd, yd, u, u_f)
-
-        implicit none
-        class(t_scalar_mls), intent(in) :: this
-        integer(kind = I4),  intent(in) :: lvl, n1, n2
-        real(kind = R8), intent(out)    :: u_f(:,:)
-        real(kind = R8), intent(in)     :: u(:)
-        real(kind = R8), intent(in)     :: xd(:), yd(:)!, llcor_x, llcor_y
-        real(kind = R8), allocatable    :: xt(:), yt(:), ut(:)
-        integer (kind = I4) :: n, i, j, m
-        real(kind = R8) :: dxc, dyc
-        real(kind = R8), allocatable :: xc(:), yc(:), temp(:), c(:), uc(:)
-
-!        print*, this%dx_at_level(lvl), lvl, llcor_y
-!        print*, xd, size(u_f, 2)
-!        print*, " "
-!        print*, yd(1:n1*n2:n2)
-!        allocate(xt, source = xd(1:n1:1))
-!        allocate(yt, source = yd(1:n1*n2:n2))
-        allocate(ut(9))
-        allocate(xt(9))
-        allocate(yt(9))
-        allocate(xc(this%nchlds))
-        allocate(yc(this%nchlds))
-        allocate(uc(this%nchlds))
-!        xt(:) = xd(1:n1:1)
-!        yt(:) = yd(1:n2*n1:n2)
-!        print*, xt
-!        print*, yt
-!        print*,""
-        n = 0
-        do i = 2, n1 - 1
-            do j = 2, n2 - 1
-                n = (n1*(i-1)) + j
-                ut(1:3) = u(n-n1-1:n-n1+1)
-                ut(4:6) = u(n-1:n+1)
-                ut(7:9) = u(n+n1-1:n+n1+1)
-                xt(1:3) = xd(n-n1-1:n-n1+1)
-                xt(4:6) = xd(n-1:n+1)
-                xt(7:9) = xd(n+n1-1:n+n1+1)
-                yt(1:3) = yd(n-n1-1:n-n1+1)
-                yt(4:6) = yd(n-1:n+1)
-                yt(7:9) = yd(n+n1-1:n+n1+1)
-                dxc = 0.5d0 * this%dx_at_level(lvl)
-                dyc = 0.5d0 * this%dy_at_level(lvl)
-                xc(1:3:2) =  - dxc
-                xc(2:4:2) =  + dxc
-                yc(1:2:1) =  - dyc
-                yc(3:4:1) =  + dyc
-
-                do m = 1, this%nchlds
-!                    xt(:) = xt(:) - xc(n)
-!                    yt(:) = yt(:) - yc(n)
-                    c = matmul (this%arr_of_a_inv(m, lvl)%a, &
-                        matmul (this%arr_of_b_mat(m, lvl)%a, ut))
-!                    temp = [1.d0, xc(m), yc(m), xc(m)**2, xc(m)*yc(m), yc(m)**2]
-                    temp = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
-                    uc(m) = dot_product (c, temp)
-                    print*, m, uc(m)- dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
-                    print*," "
-
-                end do
-
-            end do
-        end do
-
-
-    end subroutine get_s_interpolated
-
-
-
-    subroutine get_v_interpolated (this, u, v, vel_f)
-
-        implicit none
-        class(t_vector_mls) :: this
-        real (8) :: u(:), v(:), vel_f(:)
-
-    end subroutine get_v_interpolated
 
 
 
