@@ -1,0 +1,1 @@
+/usr/bin/f95    CMakeFiles/main.dir/src/main.f90.o CMakeFiles/main.dir/src/m_interpolations.f90.o CMakeFiles/main.dir/src/m_least_square.f90.o CMakeFiles/main.dir/src/m_math.f90.o CMakeFiles/main.dir/src/mod_test.f90.o CMakeFiles/main.dir/src/mod_write.f90.o CMakeFiles/main.dir/src/m_tests.f90.o  -o main ../third_party/liblapack.a ../third_party/libblas.a 

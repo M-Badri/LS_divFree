@@ -1,0 +1,8 @@
+# The fortran modules provided by this target.
+provides
+ m_interpolations.mod
+ m_least_square.mod
+ m_math.mod
+ m_tests.mod
+ mod_tests.mod
+ mod_write.mod
