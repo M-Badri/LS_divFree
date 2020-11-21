@@ -16,6 +16,8 @@ program simplified_2
     real(kind = 8), allocatable :: ui(:), vi(:)
     integer ::  nd, i
 
+	! Add some notes to check github
+
 !    call get_test_1_data (x1d, y1d, xd, yd, ud, vd)
 !    call write_out_scalar_field (x1d, y1d, xd, yd, ud, "intial_field.dat")
 
