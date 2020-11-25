@@ -251,6 +251,7 @@ contains
         allocate (intrp%xld(nd))
         allocate (intrp%yld(nd))
         allocate (intrp%uld(nd))
+        allocate (intrp%vld(nd))
 
         allocate (intrp%arr_of_a_inv(intrp%nchlds, nlvls))
         allocate (intrp%arr_of_b_mat(intrp%nchlds, nlvls))
@@ -281,7 +282,7 @@ contains
         do n = 1, this%nlvls
             call this%fill_stencil_matrises (n)
             dx = this%dx_at_level (n) / 2.0d0
-            dy = this%dx_at_level (n) / 2.0d0
+            dy = this%dy_at_level (n) / 2.0d0
             xi(1:3:2) = -dx
             xi(2:4:2) =  dx
             yi(1:2:1) = -dy
@@ -295,7 +296,7 @@ contains
                 b = matmul (transpose(p), w)
                 a = matmul (b, p)
                 this%arr_of_a_inv(m, n)%a(:,:) = inverse_matrix (a)
-                print*, size(b,1), size(b,2),nd
+!                print*, size(b,1), size(b,2),nd
                 this%arr_of_b_mat(m, n)%a(:,:) = b
             end do
         end do
@@ -315,7 +316,7 @@ contains
 
         real(kind = R8), allocatable    :: ut(:), xt(:), yt(:)
         real(kind = R8), allocatable    :: xc(:), yc(:), c(:), uc(:)
-        real(kind = R8), allocatable    :: temp(:), temp2(:)
+        real(kind = R8), allocatable    :: temp(:)!, temp2(:)
         real(kind = R8)    :: dxc, dyc
         integer(kind = I4) :: n, i, j, m
 
@@ -331,11 +332,11 @@ contains
             case(12)
                 temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, &
                          1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
-                temp2 = [0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+!                temp2 = [0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
 
             case(8)
                 temp  = [1.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
-                temp2 = [0.0d0, 0.0d0, 0.0d0, 2.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
+!                temp2 = [0.0d0, 0.0d0, 0.0d0, 2.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
 
         end select
 
@@ -373,9 +374,10 @@ contains
 !                    print*, size(this%arr_of_b_mat(m, lvl)%a, 2)
                     c = matmul (this%arr_of_a_inv(m, lvl)%a, &
                         matmul (this%arr_of_b_mat(m, lvl)%a, ut))
-                    uc(m) = dot_product (c, temp)
+                    uc(m) = dot_product (c(6:12), temp(6:12))
 
-                    print*, m, uc(m) , dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))
+                    print*, m, uc(m) , dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m)), &
+                                       -dsin(xt(5)+xc(m)) * dcos(yt(5)+yc(m))
 !                    if(this%nc == 8) then
 !                        print*, m, dot_product (c, temp2) &
 !                                 + dcos(xt(5)+xc(m)) * dsin(yt(5)+yc(m))

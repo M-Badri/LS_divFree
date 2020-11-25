@@ -41,7 +41,7 @@ contains
         class(t_test_data), allocatable :: td1
         real(kind = R8), parameter :: pi = dacos(-1.0d0)
         real(kind = R8) :: lx = 2.0d0*pi, ly = 2.0d0*pi
-        integer(kind = I4) :: nx = 256, ny = 256
+        integer(kind = I4) :: nx = 16, ny = 16
         integer(kind = I4) :: i, j, n, m
         real(kind = R8) :: dx, dy
 
@@ -56,7 +56,7 @@ contains
         allocate (td1%ll_corner_x(td1%n_lvls))
         allocate (td1%ll_corner_y(td1%n_lvls))
         td1%ll_corner_x(:) = ((nx / 2) * td1%dx_c)
-        td1%ll_corner_y(:) = ((ny / 2) * td1%dx_c)
+        td1%ll_corner_y(:) = ((ny / 2) * td1%dy_c)
 
         allocate (td1%x1d(td1%n_lvls, td1%n1))
         allocate (td1%y1d(td1%n_lvls, td1%n2))
