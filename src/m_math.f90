@@ -1,5 +1,7 @@
 module m_math
-
+!
+!> This module provides a tool for matrix inversion.
+!
 
 contains
 

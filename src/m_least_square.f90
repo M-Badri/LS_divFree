@@ -193,8 +193,6 @@ contains
         integer :: i
         real(kind = 8) :: p(3*nd,nc)
 
-        print*, nd, "rrrrrrrrrrrrr"
-
         do i = 1, nd
             p(3*i-2, :) = [1.0d0, xd(i), yd(i), xd(i)**2, yd(i)**2, xd(i)*yd(i), &
                            0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0]
